@@ -7,6 +7,10 @@ A small FastAPI + Streamlit movie recommendation demo using a local TF-IDF index
 - Local TF‑IDF recommendations (titles) with TMDB poster lookup
 - Genre-based recommendations via TMDB discover
 
+## Live Demo
+- **Streamlit Frontend:** https://movie-recommendation-rikki.streamlit.app/
+- **FastAPI Backend:** https://movie-recommendation-ocuk.onrender.com
+
 ## Setup
 1. Create a Python environment and install requirements:
 
