@@ -111,13 +111,8 @@ def poster_grid(cards, cols=6, key_prefix="grid"):
             poster = m.get("poster_url")
 
             with colset[c]:
-                link = f"?view=details&id={tmdb_id}" if tmdb_id else "#"
-
                 if poster:
-                    st.markdown(
-                        f"<a href='{link}' class='card-link'><div class='poster-wrap'><img src='{poster}' class='poster-img'/></div></a>",
-                        unsafe_allow_html=True,
-                    )
+                    st.image(poster, use_column_width=True)
                 else:
                     st.markdown("🖼️ No poster")
 
@@ -135,6 +130,10 @@ def poster_grid(cards, cols=6, key_prefix="grid"):
                 st.markdown(f"<div class='movie-title'>{title}</div>", unsafe_allow_html=True)
                 if meta:
                     st.markdown(f"<div class='meta'>{meta}</div>", unsafe_allow_html=True)
+
+                if st.button("View", key=f"{key_prefix}_{r}_{c}_{idx}_{tmdb_id}"):
+                    if tmdb_id:
+                        goto_details(tmdb_id)
 
 
 def to_cards_from_tfidf_items(tfidf_items):
@@ -262,8 +261,6 @@ if st.session_state.view == "home":
         "Search by movie title (keyword)", placeholder="Type: avenger, batman, love..."
     )
 
-    st.divider()
-
     # SEARCH MODE (Autocomplete + word-match results)
     if typed.strip():
         if len(typed.strip()) < 2:
@@ -363,7 +360,6 @@ elif st.session_state.view == "details":
         st.markdown("#### Backdrop")
         st.image(data["backdrop_url"], use_column_width=True)
 
-    st.divider()
     st.markdown("### ✅ Recommendations")
 
     # Recommendations (TF-IDF + Genre) via your bundle endpoint
