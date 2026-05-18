@@ -14,15 +14,13 @@ st.set_page_config(
 )
 
 # =============================
-# MODERN DARK UI
+# MODERN DARK UI (No Rounded Rectangles)
 # =============================
 st.markdown(
     """
 <style>
 
-/* =========================
-   GLOBAL
-========================= */
+/* GLOBAL */
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
@@ -38,18 +36,15 @@ html, body, [class*="css"] {
     color: white;
 }
 
-/* =========================
-   CONTAINER FIX
-========================= */
+/* Container fix */
 .block-container {
-    padding-top: 0.6rem !important;
-    padding-bottom: 2rem;
+    padding-top: 5rem !important;
+    padding-bottom: 5rem !important;
     max-width: 1450px;
 }
 
-/* Remove streamlit top spacing */
 section.main > div {
-    padding-top: 0rem !important;
+    padding-top: 5rem !important;
 }
 
 /* Remove white skeleton loading bars */
@@ -57,39 +52,42 @@ section.main > div {
     display: none !important;
 }
 
-/* =========================
-   TEXT
-========================= */
+/* Text */
 .small-muted {
     color: #94a3b8;
     font-size: 0.92rem;
 }
 
-/* =========================
-   CARDS
-========================= */
-.card {
-    background: rgba(15, 23, 42, 0.75);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 18px;
-    padding: 18px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-}
-
-/* =========================
-   MOVIE POSTERS
-========================= */
-.stImage img {
-    border-radius: 14px;
-}
-
+/* Movie poster wrap - no rounded corners, just clean */
 .poster-wrap {
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease;
+    margin-bottom: 1rem;
 }
 
 .poster-wrap:hover {
     transform: translateY(-6px);
+}
+
+/* Clickable image styling */
+.clickable-poster-img {
+    width: 100%;
+    border-radius: 0px;  /* No rounded corners */
+    transition: 0.2s ease;
+    display: block;
+}
+
+/* Placeholder for missing poster */
+.poster-placeholder {
+    background: rgba(255,255,255,0.05);
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    border-radius: 0px;
 }
 
 .movie-title {
@@ -106,48 +104,22 @@ section.main > div {
     margin-top: 4px;
 }
 
-/* =========================
-   BUTTONS
-========================= */
-.stButton > button {
-    width: 100%;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(255,255,255,0.04);
-    color: white;
-    padding: 0.5rem 1rem;
-    transition: all 0.2s ease;
-}
-
-.stButton > button:hover {
-    border-color: #38bdf8;
-    color: #38bdf8;
-    transform: translateY(-2px);
-}
-
-/* =========================
-   INPUTS
-========================= */
+/* Inputs */
 .stTextInput input,
 .stSelectbox div[data-baseweb="select"] {
-    border-radius: 12px !important;
+    border-radius: 0px !important;
 }
 
-/* =========================
-   SIDEBAR
-========================= */
+/* Sidebar */
 section[data-testid="stSidebar"] {
     background: rgba(2, 6, 23, 0.95);
 }
 
-/* =========================
-   HEADINGS
-========================= */
+/* Headings */
 h1, h2, h3 {
     color: white !important;
 }
 
-/* Divider */
 hr {
     border-color: rgba(255,255,255,0.08) !important;
 }
@@ -225,10 +197,9 @@ def api_get_json(path, params=None):
 
 
 # =============================
-# POSTER GRID
+# POSTER GRID (Clickable images, no buttons)
 # =============================
 def poster_grid(cards, cols=6, key_prefix="grid"):
-
     if not cards:
         st.info("No movies found.")
         return
@@ -237,11 +208,9 @@ def poster_grid(cards, cols=6, key_prefix="grid"):
     idx = 0
 
     for r in range(rows):
-
         colset = st.columns(cols)
 
         for c in range(cols):
-
             if idx >= len(cards):
                 break
 
@@ -253,22 +222,31 @@ def poster_grid(cards, cols=6, key_prefix="grid"):
             poster = movie.get("poster_url")
 
             with colset[c]:
-
                 st.markdown("<div class='poster-wrap'>", unsafe_allow_html=True)
 
                 if poster:
-                    st.image(poster, use_container_width=True)
+                    img_html = f'''
+                        <a href="?view=details&id={tmdb_id}" target="_self" style="text-decoration: none;">
+                            <img src="{poster}" class="clickable-poster-img" loading="lazy">
+                        </a>
+                    '''
+                    st.markdown(img_html, unsafe_allow_html=True)
                 else:
-                    st.write("🖼️ No Poster")
+                    placeholder_html = f'''
+                        <a href="?view=details&id={tmdb_id}" target="_self" style="text-decoration: none;">
+                            <div class="poster-placeholder">
+                                🖼️ No Poster
+                            </div>
+                        </a>
+                    '''
+                    st.markdown(placeholder_html, unsafe_allow_html=True)
 
                 year = (movie.get("release_date") or "")[:4]
                 rating = movie.get("vote_average")
 
                 meta_parts = []
-
                 if year:
                     meta_parts.append(year)
-
                 if rating:
                     meta_parts.append(f"⭐ {float(rating):.1f}")
 
@@ -285,28 +263,17 @@ def poster_grid(cards, cols=6, key_prefix="grid"):
                         unsafe_allow_html=True,
                     )
 
-                if st.button(
-                    "View Details",
-                    key=f"{key_prefix}_{tmdb_id}_{idx}",
-                ):
-                    goto_details(tmdb_id)
-
                 st.markdown("</div>", unsafe_allow_html=True)
-
 
 # =============================
 # SEARCH PARSER
 # =============================
 def parse_tmdb_search_to_cards(data, keyword, limit=24):
-
     keyword_l = keyword.strip().lower()
 
     if isinstance(data, dict) and "results" in data:
-
         raw_items = []
-
         for m in data.get("results", []):
-
             title = (m.get("title") or "").strip()
             tmdb_id = m.get("id")
             poster_path = m.get("poster_path")
@@ -324,11 +291,8 @@ def parse_tmdb_search_to_cards(data, keyword, limit=24):
             )
 
     elif isinstance(data, list):
-
         raw_items = []
-
         for m in data:
-
             tmdb_id = m.get("tmdb_id") or m.get("id")
             title = (m.get("title") or "").strip()
 
@@ -343,7 +307,6 @@ def parse_tmdb_search_to_cards(data, keyword, limit=24):
                     "release_date": m.get("release_date", ""),
                 }
             )
-
     else:
         return [], []
 
@@ -355,20 +318,15 @@ def parse_tmdb_search_to_cards(data, keyword, limit=24):
     final_list = matched if matched else raw_items
 
     suggestions = []
-
     for x in final_list[:10]:
-
         year = (x.get("release_date") or "")[:4]
-
         label = (
             f"{x['title']} ({year})"
             if year else x["title"]
         )
-
         suggestions.append((label, x["tmdb_id"]))
 
     cards = final_list[:limit]
-
     return suggestions, cards
 
 
@@ -376,7 +334,6 @@ def parse_tmdb_search_to_cards(data, keyword, limit=24):
 # SIDEBAR
 # =============================
 with st.sidebar:
-
     st.markdown("## 🎬 Movie Recommender")
 
     if st.button("🏠 Home"):
@@ -424,14 +381,12 @@ st.divider()
 # HOME PAGE
 # =============================
 if st.session_state.view == "home":
-
     typed = st.text_input(
         "Search Movie",
         placeholder="Avengers, Batman, Interstellar...",
     )
 
     if typed.strip():
-
         data, err = api_get_json(
             "/tmdb/search",
             params={"query": typed.strip()},
@@ -439,9 +394,7 @@ if st.session_state.view == "home":
 
         if err:
             st.error(err)
-
         else:
-
             suggestions, cards = parse_tmdb_search_to_cards(
                 data,
                 typed.strip(),
@@ -449,7 +402,6 @@ if st.session_state.view == "home":
             )
 
             if suggestions:
-
                 labels = ["Select Movie"] + [
                     s[0] for s in suggestions
                 ]
@@ -461,27 +413,21 @@ if st.session_state.view == "home":
                 )
 
                 if selected != "Select Movie":
-
                     label_to_id = {
                         s[0]: s[1]
                         for s in suggestions
                     }
-
                     goto_details(label_to_id[selected])
 
             st.markdown("## Results")
-
             poster_grid(
                 cards,
                 cols=grid_cols,
                 key_prefix="search",
             )
-
         st.stop()
 
-    # =============================
-    # HOME FEED
-    # =============================
+    # Home feed
     st.markdown(
         f"## {home_category.replace('_', ' ').title()}"
     )
@@ -496,7 +442,6 @@ if st.session_state.view == "home":
 
     if err:
         st.error(err)
-
     else:
         poster_grid(
             home_cards,
@@ -508,7 +453,6 @@ if st.session_state.view == "home":
 # DETAILS PAGE
 # =============================
 elif st.session_state.view == "details":
-
     tmdb_id = st.session_state.selected_tmdb_id
 
     if not tmdb_id:
@@ -532,13 +476,8 @@ elif st.session_state.view == "details":
 
     left, right = st.columns([1, 2.3], gap="large")
 
-    # =============================
-    # POSTER
-    # =============================
+    # Poster
     with left:
-
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-
         if data.get("poster_url"):
             st.image(
                 data["poster_url"],
@@ -547,19 +486,11 @@ elif st.session_state.view == "details":
         else:
             st.write("🖼️ No Poster")
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # =============================
-    # DETAILS
-    # =============================
+    # Details
     with right:
-
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-
         st.markdown(f"# {data.get('title','')}")
 
         release = data.get("release_date") or "-"
-
         genres = ", ".join(
             [g["name"] for g in data.get("genres", [])]
         ) or "-"
@@ -568,44 +499,32 @@ elif st.session_state.view == "details":
             f"<div class='small-muted'>📅 Release: {release}</div>",
             unsafe_allow_html=True,
         )
-
         st.markdown(
             f"<div class='small-muted'>🎭 Genres: {genres}</div>",
             unsafe_allow_html=True,
         )
 
         st.markdown("---")
-
         st.markdown("## Overview")
-
         st.write(
             data.get("overview")
             or "No overview available."
         )
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # =============================
-    # BACKDROP
-    # =============================
+    # Backdrop
     if data.get("backdrop_url"):
-
         st.markdown("## Backdrop")
-
         st.image(
             data["backdrop_url"],
             use_container_width=True,
         )
 
-    # =============================
-    # RECOMMENDATIONS
-    # =============================
+    # Recommendations
     st.markdown("## Recommended Movies")
 
     title = (data.get("title") or "").strip()
 
     if title:
-
         bundle, err2 = api_get_json(
             "/movie/search",
             params={
@@ -616,25 +535,19 @@ elif st.session_state.view == "details":
         )
 
         if not err2 and bundle:
-
             st.markdown("### 🔎 Similar Movies")
 
             tfidf_movies = []
-
-            for x in bundle.get(
-                "tfidf_recommendations",
-                [],
-            ):
-
+            for x in bundle.get("tfidf_recommendations", []):
                 tmdb = x.get("tmdb") or {}
-
                 if tmdb.get("tmdb_id"):
-
                     tfidf_movies.append(
                         {
                             "tmdb_id": tmdb["tmdb_id"],
                             "title": tmdb.get("title"),
                             "poster_url": tmdb.get("poster_url"),
+                            "release_date": tmdb.get("release_date"),
+                            "vote_average": tmdb.get("vote_average"),
                         }
                     )
 
@@ -645,15 +558,10 @@ elif st.session_state.view == "details":
             )
 
             st.markdown("### 🎭 More Like This")
-
             poster_grid(
-                bundle.get(
-                    "genre_recommendations",
-                    [],
-                ),
+                bundle.get("genre_recommendations", []),
                 cols=grid_cols,
                 key_prefix="genre",
             )
-
         else:
             st.warning("No recommendations found.")
