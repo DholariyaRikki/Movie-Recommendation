@@ -2,6 +2,7 @@ import os
 import pickle
 from typing import Optional, List, Dict, Any, Tuple
 import numpy as np
+import difflib
 import pandas as pd
 import httpx
 from fastapi import FastAPI, HTTPException, Query
@@ -182,6 +183,15 @@ def get_local_idx_by_title(title: str) -> int:
     key = _norm_title(title)
     if key in TITLE_TO_IDX:
         return int(TITLE_TO_IDX[key])
+    # Try a fuzzy/close match against known titles to handle slight differences
+    try:
+        keys = list(TITLE_TO_IDX.keys())
+        matches = difflib.get_close_matches(key, keys, n=1, cutoff=0.78)
+        if matches:
+            return int(TITLE_TO_IDX[matches[0]])
+    except Exception:
+        pass
+
     raise HTTPException(
         status_code=404, detail=f"Title not found in local dataset: '{title}'"
     )
@@ -352,7 +362,12 @@ async def recommend_tfidf(
     top_n: int = Query(10, ge=1, le=50),
 ):
     recs = tfidf_recommend_titles(title, top_n=top_n)
-    return [{"title": t, "score": s} for t, s in recs]
+
+    out = []
+    for t, s in recs:
+        card = await attach_tmdb_card_by_title(t)
+        out.append({"title": t, "score": s, "tmdb": card.dict() if card else None})
+    return out
 
 
 # ---------- BUNDLE: Details + TF-IDF recs + Genre recs ----------

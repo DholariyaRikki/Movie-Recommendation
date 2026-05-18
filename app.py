@@ -15,10 +15,27 @@ st.set_page_config(page_title="Movie Recommender", page_icon="🎬", layout="wid
 st.markdown(
     """
 <style>
+/* Container */
 .block-container { padding-top: 1rem; padding-bottom: 2rem; max-width: 1400px; }
 .small-muted { color:#6b7280; font-size: 0.92rem; }
-.movie-title { font-size: 0.9rem; line-height: 1.15rem; height: 2.3rem; overflow: hidden; }
-.card { border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 14px; background: rgba(255,255,255,0.7); }
+
+/* Card */
+.card { border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 12px; background: #ffffff; box-shadow: 0 6px 18px rgba(16,24,40,0.06); }
+
+/* Poster */
+.poster-img { width:100%; border-radius:8px; display:block; }
+.poster-wrap { position:relative; }
+.meta { font-size:0.85rem; color:#374151; margin-top:6px; }
+.movie-title { font-size:0.95rem; font-weight:600; line-height:1.1rem; height:2.4rem; overflow:hidden; }
+
+/* Link style */
+.card-link { text-decoration:none; color:inherit; }
+
+/* Hover */
+.poster-wrap:hover { transform: translateY(-4px); transition: all 180ms ease; }
+
+/* Small helper */
+.small-muted { color:#6b7280; font-size: 0.92rem; }
 </style>
 """,
     unsafe_allow_html=True,
@@ -94,18 +111,30 @@ def poster_grid(cards, cols=6, key_prefix="grid"):
             poster = m.get("poster_url")
 
             with colset[c]:
+                link = f"?view=details&id={tmdb_id}" if tmdb_id else "#"
+
                 if poster:
-                    st.image(poster, use_column_width=True)
+                    st.markdown(
+                        f"<a href='{link}' class='card-link'><div class='poster-wrap'><img src='{poster}' class='poster-img'/></div></a>",
+                        unsafe_allow_html=True,
+                    )
                 else:
-                    st.write("🖼️ No poster")
+                    st.markdown("🖼️ No poster")
 
-                if st.button("Open", key=f"{key_prefix}_{r}_{c}_{idx}_{tmdb_id}"):
-                    if tmdb_id:
-                        goto_details(tmdb_id)
+                # meta line: year / rating
+                year = (m.get("release_date") or "")[:4]
+                rating = m.get("vote_average")
+                meta_parts = []
+                if year:
+                    meta_parts.append(year)
+                if rating is not None:
+                    meta_parts.append(f"⭐ {float(rating):.1f}")
 
-                st.markdown(
-                    f"<div class='movie-title'>{title}</div>", unsafe_allow_html=True
-                )
+                meta = " • ".join(meta_parts)
+
+                st.markdown(f"<div class='movie-title'>{title}</div>", unsafe_allow_html=True)
+                if meta:
+                    st.markdown(f"<div class='meta'>{meta}</div>", unsafe_allow_html=True)
 
 
 def to_cards_from_tfidf_items(tfidf_items):
