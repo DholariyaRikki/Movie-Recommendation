@@ -9,10 +9,18 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
     steps:
+      - uses: actions/checkout@v4
+
       - name: Ping Backend and Frontend
         run: |
           # Replace these URLs with your actual Render backend and Streamlit frontend URLs
-          curl -s "https://movie-recommendation-ocuk.onrender.com/" > /dev/null
-          curl -s "https://movie-recommendation-rikki.streamlit.app/" > /dev/null
+          curl -s -m 10 "https://movie-recommendation-ocuk.onrender.com/" > /dev/null
+          curl -s -m 10 "https://movie-recommendation-rikki.streamlit.app/" > /dev/null
           echo "Pinged both services successfully!"
+
+      - name: Keepalive Workflow
+        uses: gautamkrishnar/keepalive-workflow@v2
